@@ -7,7 +7,7 @@
 use chrono::{Utc, Duration}; // 用于处理日期和时间
 use smcrypto::sm2; // 用于 SM2 加密和解密
 use base64; // 用于 base64 编码和解码
-
+use std::fs;
 // 生成注册码
 //
 // 参数：
@@ -71,4 +71,12 @@ pub fn decode_code(code: &str, private_key: &str) -> (String, chrono::DateTime<U
     } else {
         panic!("Invalid code format");
     }
+}
+
+pub fn read_key_file(key_path: String) -> String {
+    let hex = fs::read_to_string(key_path).expect("Reading key failed");
+
+    let bytes = hex::decode(hex).expect("Decoding key failed");
+
+    String::from_utf8(bytes).expect("Invalid UTF-8")
 }

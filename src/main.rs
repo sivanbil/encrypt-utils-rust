@@ -18,10 +18,10 @@ use rand::thread_rng; // 用于生成随机数
 use rand::distributions::Alphanumeric; // 用于生成随机字符
 use rand::Rng; // 用于生成随机数
 use base64; // 用于 base64 编码和解码
-use regitry_code::{generate_code,decode_code}; // 从 regitry_code 库中导入函数
+use regitry_code::{generate_code,decode_code, read_key_file}; // 从 regitry_code 库中导入函数
 
 #[derive(Parser)]
-#[clap(name = "sm2-tool")]
+#[clap(name = "encrypt-utils-rust")]
 #[clap(version = "1.0")]
 #[clap(about = "A command line tool for SM2 encryption and decryption")]
 struct Cli {
@@ -71,9 +71,7 @@ fn main() {
     if let Some(email) = cli.register_code.clone() { // clone email here
         if let Some(public_key) = cli.public_key.clone() {
             if let Some(days) = cli.days {
-                let pk_hex = fs::read_to_string(public_key).expect("Reading public key failed");
-                let pk_bytes = hex::decode(pk_hex).expect("Decoding public key failed");
-                let pk_value = String::from_utf8(pk_bytes).expect("Invalid UTF-8");
+                let pk_value = read_key_file(public_key);
 
                 let code = generate_code(&email, days, &pk_value); // Pass email and pk_value
                 println!("Register code: {}", code);
@@ -83,9 +81,7 @@ fn main() {
 
     if let Some(public_key) = cli.public_key {
         if let Some(encrypt_str) = cli.encrypt_str {
-            let pk_hex = fs::read_to_string(public_key).expect("Reading public key failed");
-            let pk_bytes = hex::decode(pk_hex).expect("Decoding public key failed");
-            let pk_value = String::from_utf8(pk_bytes).expect("Invalid UTF-8");
+            let pk_value = read_key_file(public_key);
             let enc_ctx = sm2::Encrypt::new(&pk_value);
             let enc = enc_ctx.encrypt(encrypt_str.as_bytes());
             println!("Encrypted (hex): {}", hex::encode(enc));
@@ -95,9 +91,7 @@ fn main() {
     // Moved the decode code logic here to avoid multiple mutable borrows of private_key
     if let Some(code) = cli.decode_code.clone() { // clone code here
         if let Some(private_key) = cli.private_key.clone() {
-            let sk_hex = fs::read_to_string(private_key).expect("Reading private key failed");
-            let sk_bytes = hex::decode(sk_hex).expect("Decoding private key failed");
-            let sk_value = String::from_utf8(sk_bytes).expect("Invalid UTF-8");
+            let sk_value = read_key_file(private_key);
 
             let (email, expire_time) = decode_code(&code, &sk_value); // Pass code and sk_value
             println!("Email: {}", email);
@@ -107,9 +101,8 @@ fn main() {
 
     if let Some(private_key) = cli.private_key {
         if let Some(decrypt_hex) = cli.decrypt_hex {
-            let sk_hex = fs::read_to_string(private_key).expect("Reading private key failed");
-            let sk_bytes = hex::decode(sk_hex).expect("Decoding private key failed");
-            let sk_value = String::from_utf8(sk_bytes).expect("Invalid UTF-8");
+
+            let sk_value = read_key_file(private_key);
             let dec_ctx = sm2::Decrypt::new(&sk_value);
             let enc_bytes = hex::decode(decrypt_hex).expect("Decoding encrypted data failed");
             let dec = dec_ctx.decrypt(&enc_bytes);
