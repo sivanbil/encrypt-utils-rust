@@ -1,11 +1,24 @@
-use clap::{Parser, ArgGroup};
-use chrono::{Utc, Duration};
-use smcrypto::sm2;
-use std::fs;
-use rand::thread_rng;
-use rand::distributions::Alphanumeric;
-use rand::Rng;
-use base64;
+// src/main.rs
+
+// regitry-code 工具
+//
+// 这个命令行工具使用 SM2 国密算法进行加密、解密和生成注册码。
+//
+// 功能：
+//   * 生成 SM2 密钥对
+//   * 使用公钥加密字符串
+//   * 使用私钥解密字符串
+//   * 生成注册码（包含用户信息和有效期，使用 SM2 加密）
+//   * 解码注册码
+use clap::{Parser, ArgGroup}; // 用于解析命令行参数
+use chrono::{Utc, Duration}; // 用于处理日期和时间
+use smcrypto::sm2; // 用于 SM2 加密和解密
+use std::fs; // 用于文件操作
+use rand::thread_rng; // 用于生成随机数
+use rand::distributions::Alphanumeric; // 用于生成随机字符
+use rand::Rng; // 用于生成随机数
+use base64; // 用于 base64 编码和解码
+use regitry_code::{generate_code,decode_code}; // 从 regitry_code 库中导入函数
 
 #[derive(Parser)]
 #[clap(name = "sm2-tool")]
@@ -102,53 +115,5 @@ fn main() {
             let dec = dec_ctx.decrypt(&enc_bytes);
             println!("Decrypted: {}", String::from_utf8(dec).expect("Invalid UTF-8"));
         }
-    }
-}
-
-fn generate_code(email: &str, days: i64, public_key: &str) -> String {
-    let enc_ctx = sm2::Encrypt::new(public_key);
-
-    // 计算有效期
-    let now = Utc::now();
-    let expire_time = now + Duration::days(days);
-
-    // 将 email 和有效期拼接成字符串
-    let data = format!("{}|{}", email, expire_time.to_rfc3339());
-
-    // 加密数据
-    let encrypted_data = enc_ctx.encrypt(data.as_bytes());
-
-    // 先进行 hex 编码
-    let encrypted_hex = hex::encode(encrypted_data);
-
-    // 再进行 base64 编码
-    let code = base64::encode(encrypted_hex);
-
-    code
-}
-
-fn decode_code(encrypted_code: &str, private_key: &str) -> (String, chrono::DateTime<Utc>) {
-    // 将私钥转换为十六进制字符串
-    let sk_hex = private_key;
-
-    let dec_ctx = sm2::Decrypt::new(&sk_hex); // 直接使用十六进制字符串
-
-    // 先进行 base64 解码
-    let encrypted_hex = base64::decode(encrypted_code).expect("Decoding base64 failed");
-    // 解密数据
-    let encrypted_data = hex::decode(encrypted_hex).expect("Decoding encrypted code failed");
-    let decrypted_data = dec_ctx.decrypt(&encrypted_data);
-    let data = String::from_utf8(decrypted_data).expect("Invalid UTF-8");
-
-    // 解析 email 和有效期
-    let parts: Vec<&str> = data.split('|').collect();
-    if parts.len() == 2 {
-        let email = parts[0].to_string();
-        let expire_time = chrono::DateTime::parse_from_rfc3339(parts[1])
-            .expect("Invalid expire time format")
-            .with_timezone(&Utc); // 确保时区正确
-        (email, expire_time)
-    } else {
-        panic!("Invalid code format");
     }
 }

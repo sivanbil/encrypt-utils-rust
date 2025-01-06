@@ -1,7 +1,10 @@
 [package]
 name = "regitry-code"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
+
+[lib]
+name = "regitry_code"
 
 [dependencies]
 smcrypto = "0.3.1"  # SM2 加密算法
