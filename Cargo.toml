@@ -1,0 +1,13 @@
+[package]
+name = "regitry-code"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+smcrypto = "0.3.1"  # SM2 加密算法
+hex = "0.4.3"
+clap = { version = "4.5.23", features = ["derive"] }
+rand = "0.8.5"
+chrono = "0.4.39"
+base64 = "0.13"
+
