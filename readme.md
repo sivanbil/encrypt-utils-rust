@@ -32,14 +32,18 @@ regitry_code = { version="0.1.0" }  # 假设 regitry-code 库位于您的项目�
 **`generate_code` 函数**
 
 ```rust
-use regitry_code::generate_code;
+use regitry_code::{generate_code, read_key_ile};
 
 fn main() {
     let email = "test@example.com";
     let days = 30;
-    let public_key = "your_public_key"; 
+    let public_key_path = "public.key"; // 公钥文件路径
 
-    let code = generate_code(email, days, public_key);
+    // 读取公钥
+    let public_key = read_key_ile(public_key_path);
+
+    // 生成注册码
+    let code = generate_code(email, days, &public_key);
     println!("Register code: {}", code);
 }
 ```
@@ -47,13 +51,17 @@ fn main() {
 **`decode_code` 函数**
 
 ```rust
-use regitry_code::decode_code;
+use regitry_code::{decode_code, read_key_file};
 
 fn main() {
     let code = "your_register_code";
-    let private_key = "your_private_key";
+    let private_key_path = "private.key"; // 私钥文件路径
 
-    let (email, expire_time) = decode_code(code, private_key);
+    // 读取私钥
+    let private_key = read_key_file(private_key_path);
+
+    // 解码注册码
+    let (email, expire_time) = decode_code(code, &private_key);
     println!("Email: {}", email);
     println!("Expire time: {}", expire_time);
 }
