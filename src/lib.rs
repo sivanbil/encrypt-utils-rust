@@ -89,7 +89,7 @@ pub fn read_key_file(key_path: String) -> String {
 
 // 生成随机字符串函数
 #[cfg(feature = "password")]
-fn generate_random_string(length: usize) -> String {
+pub fn generate_random_string(length: usize) -> String {
     let charset: &[u8] = b"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     let mut rng = rand::thread_rng();
     let random_string: String = (0..length)
