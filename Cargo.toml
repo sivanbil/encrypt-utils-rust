@@ -1,6 +1,6 @@
 [package]
 name = "regitry-code"
-version = "1.0.1"
+version = "1.0.2"
 edition = "2021"
 authors = ["Sivan <sivanliaobil@gmail.com>"]
 repository = "https://github.com/sivanbil/encrypt-utils-rust.git"
@@ -17,4 +17,9 @@ clap = { version = "4.5.23", features = ["derive"] }
 rand = "0.8.5"
 chrono = "0.4.39"
 base64 = "0.13"
+
+# 特性定义
+[features]
+default = []  # 默认特性，不包含密码相关功能
+password = [] # 启用密码相关功能
 
