@@ -8,6 +8,9 @@ use chrono::{Utc, Duration}; // 用于处理日期和时间
 use smcrypto::sm2; // 用于 SM2 加密和解密
 use base64; // 用于 base64 编码和解码
 use std::fs;
+use smcrypto::sm3::sm3_hash; // SM3 哈希算法
+use rand::Rng;
+use std::str;
 // 生成注册码
 //
 // 参数：
@@ -79,4 +82,44 @@ pub fn read_key_file(key_path: String) -> String {
     let bytes = hex::decode(hex).expect("Decoding key failed");
 
     String::from_utf8(bytes).expect("Invalid UTF-8")
+}
+
+
+
+
+// 生成随机字符串函数
+#[cfg(feature = "password")]
+fn generate_random_string(length: usize) -> String {
+    let charset: &[u8] = b"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    let mut rng = rand::thread_rng();
+    let random_string: String = (0..length)
+        .map(|_| {
+            let idx = rng.gen_range(0..charset.len());
+            charset[idx] as char
+        })
+        .collect();
+    random_string
+}
+
+// 加密密码函数
+#[cfg(feature = "password")]
+pub fn encrypt_password(password: &str, salt: &str) -> String {
+    // 将密码和盐值拼接
+    let data = format!("{}{}", password, salt);
+
+    // 使用 SM3 哈希算法进行加密
+    let hash_result = sm3_hash(data.as_bytes());
+
+    // 将加密结果转换为 Base64 字符串
+    base64::encode(hash_result)
+}
+
+// 验证密码函数
+#[cfg(feature = "password")]
+pub fn verify_password(password: &str, salt: &str, encrypted_password: &str) -> bool {
+    // 重新加密密码
+    let new_encrypted_password = encrypt_password(password, salt);
+
+    // 比较两个加密结果是否相同
+    new_encrypted_password == encrypted_password
 }
