@@ -123,3 +123,32 @@ pub fn verify_password(password: &str, salt: &str, encrypted_password: &str) -> 
     // 比较两个加密结果是否相同
     new_encrypted_password == encrypted_password
 }
+
+use time::{OffsetDateTime, format_description};
+
+#[cfg(feature = "code-utils")]
+pub fn generate_task_number() -> String {
+    // 获取当前时间戳（精确到秒）
+    let now = OffsetDateTime::now_utc();
+    let timestamp = now.unix_timestamp(); // 获取 Unix 时间戳
+
+    // 格式化时间戳为字符串（例如：20231012_153045）
+    let format = format_description::parse("[year][month][day]_[hour][minute][second]").unwrap();
+    let time_str = now.format(&format).unwrap();
+
+    // 生成随机字符串（例如：4位随机字母+数字）
+    let mut rng = rand::thread_rng();
+    let random_part: String = (0..4)
+        .map(|_| {
+            let num = rng.gen_range(0..36); // 0-9 + a-z
+            if num < 10 {
+                (b'0' + num) as char // 数字 0-9
+            } else {
+                (b'a' + (num - 10)) as char // 字母 a-z
+            }
+        })
+        .collect();
+
+    // 组合时间戳和随机部分
+    format!("{}_{}", time_str, random_part)
+}
